@@ -103,37 +103,37 @@
   };
   speed = 0;
   
-  $(document).keydown(function(ev) {
-    var evData;
-    if (keymap[ev.keyCode] == null) {
-      return;
-    }
-    if (keymap[ev.keyCode].ev == 'tweet') {
-      return;
-    }
-    ev.preventDefault();
-    speed = speed >= 1 ? 1 : speed + 0.08 / (1 - speed);
-    evData = keymap[ev.keyCode];
-    return faye.publish("/drone/" + evData.ev, {
-      action: evData.action,
-      speed: speed,
-      duration: evData.duration
-    });
-  });
-  
-  $(document).keyup(function(ev) {
-    if (keymap[ev.keyCode].ev == 'tweet') {
-      evData = keymap[ev.keyCode];
-      return faye.publish("/drone/" + evData.ev, {
-        action: evData.action
-      });
-    } else {
-      speed = 0;
-      return faye.publish("/drone/drone", {
-        action: 'stop'
-      });
-    }
-  });
+//   $(document).keydown(function(ev) {
+//     var evData;
+//     if (keymap[ev.keyCode] == null) {
+//       return;
+//     }
+//     if (keymap[ev.keyCode].ev == 'tweet') {
+//       return;
+//     }
+//     ev.preventDefault();
+//     speed = speed >= 1 ? 1 : speed + 0.08 / (1 - speed);
+//     evData = keymap[ev.keyCode];
+//     return faye.publish("/drone/" + evData.ev, {
+//       action: evData.action,
+//       speed: speed,
+//       duration: evData.duration
+//     });
+//   });
+//   
+//   $(document).keyup(function(ev) {
+//     if (keymap[ev.keyCode] != undefined && keymap[ev.keyCode].ev == 'tweet') {
+//       evData = keymap[ev.keyCode];
+//       return faye.publish("/drone/" + evData.ev, {
+//         action: evData.action
+//       });
+//     } else {
+//       speed = 0;
+//       return faye.publish("/drone/drone", {
+//         action: 'stop'
+//       });
+//     }
+//   });
   
   $("*[data-action]").on("mousedown", function(ev) {
     var action = $(this).attr("data-action");
@@ -149,8 +149,10 @@
   $("*[data-action]").on("mouseup", function(ev) {
     var action = $(this).attr("data-action");
     if (action == 'tweet') {
+      console.log($('[name=tweetText]').val());
       return faye.publish("/drone/tweet", {
-        action : $(this).attr("data-param")
+        action : $(this).attr("data-param"),
+        text: $('[name=tweetText]').val()
       });
     } else {
       return faye.publish("/drone/move", {
