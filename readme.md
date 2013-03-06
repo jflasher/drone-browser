@@ -1,3 +1,13 @@
+Overview
+=======
+This is pretty much the exact same project as https://github.com/functino/drone-browser with 
+the addition of the ability to Tweet out the most recent image. Also, I don't like writing in CoffeeScript, so 
+I stopped using it and just modified the JS. 
+
+To use the Twitter functionality, you will need to create your own Twitter API tokens and include them in 
+the twitterKeys.js file (using the sample as a template). 
+
+
 Getting started
 ======
 Connect to your ar drone 2 via WLAN, then run node.server.js open up localhost:3001 and you're ready to go.

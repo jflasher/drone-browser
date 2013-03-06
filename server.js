@@ -1,5 +1,8 @@
 (function() {
   var app, currentImg, drone, express, faye, imageSendingPaused, path, server, socket;
+  var keys = require('./twitterkeys');
+  var Twitter = require('node-twitter');
+  var fs = require('fs-extra');
   express = require("express");
   faye = require("faye");
   path = require("path");
@@ -42,8 +45,62 @@
   socket.subscribe("/drone/tweet", function(cmd) {
     var _name;
     console.log('drone command: ', cmd);
+    
+    var text = cmd.text;
+    if (text == '') {
+      text = "Check out the view from the iSL Ops Copter!";
+    }
+        
+    // Save current frame to the file system if we have one
+    if (currentImg == null) {
+      fs.copy('./public/default.png', 'image.png', function (err) {
+        console.log("No current image, using default image.");
+        if (err) {
+          console.log(error);
+          return;
+        }
+        sendTweet(text);
+      });
+    } else {
+      fs.writeFile('image.png', currentImg, function (err) {
+        if (err) {
+          console.log(err);
+          return;
+        }
+        console.log('Image saved to local disk');
+        sendTweet(text);
+      });
+    }
+    
     return typeof drone[_name = cmd.action] === "function" ? drone[_name]() : void 0;
   });
+  
+  var sendTweet = function (text) {
+    // Init twitter client
+    var twitterRestClient = new Twitter.RestClient(
+        keys.consumerKey,
+        keys.consumerSecret,
+        keys.token,
+        keys.secret
+    );
+    
+    // Send a status with new image
+    twitterRestClient.statusesUpdateWithMedia(
+        {
+            'status': text + Date.now(),
+            'media[]': 'image.png'
+        },
+        function(error, result) {
+            if (error) {
+                console.log('Error: ' + (error.code ? error.code + ' ' + error.message : error.message));
+            }
+
+            if (result) {
+                console.log("Tweet posted successfully");
+            }
+        }
+    );
+  }
   
   server.listen(app.get("port"), function() {
     return console.log("Express server listening on port " + app.get("port"));
@@ -66,6 +123,7 @@
       return imageSendingPaused = false;
     }), 100);
   });
+  
   app.get("/image/:id", function(req, res) {
     res.writeHead(200, {
       "Content-Type": "image/png"
