@@ -27,6 +27,10 @@
     });
   });
   keymap = {
+    84: {
+      ev: 'tweet',
+      action: 'tweet'
+    },
     87: {
       ev: 'move',
       action: 'front'
@@ -98,9 +102,13 @@
     }
   };
   speed = 0;
+  
   $(document).keydown(function(ev) {
     var evData;
     if (keymap[ev.keyCode] == null) {
+      return;
+    }
+    if (keymap[ev.keyCode].ev == 'tweet') {
       return;
     }
     ev.preventDefault();
@@ -112,24 +120,45 @@
       duration: evData.duration
     });
   });
+  
   $(document).keyup(function(ev) {
-    speed = 0;
-    return faye.publish("/drone/drone", {
-      action: 'stop'
-    });
+    if (keymap[ev.keyCode].ev == 'tweet') {
+      evData = keymap[ev.keyCode];
+      return faye.publish("/drone/" + evData.ev, {
+        action: evData.action
+      });
+    } else {
+      speed = 0;
+      return faye.publish("/drone/drone", {
+        action: 'stop'
+      });
+    }
   });
+  
   $("*[data-action]").on("mousedown", function(ev) {
-    return faye.publish("/drone/" + $(this).attr("data-action"), {
-      action: $(this).attr("data-param"),
-      speed: 0.3,
-      duration: 1000 * parseInt($("#duration").val())
-    });
+    var action = $(this).attr("data-action");
+    if (action != 'tweet') {
+      return faye.publish("/drone/" + action, {
+        action: $(this).attr("data-param"),
+        speed: 0.3,
+        duration: 1000 * parseInt($("#duration").val())
+      });
+    }
   });
+  
   $("*[data-action]").on("mouseup", function(ev) {
-    return faye.publish("/drone/move", {
-      action: $(this).attr("data-param"),
-      speed: $(this).attr("data-action") === "move" ? 0 : void 0
-    });
+    var action = $(this).attr("data-action");
+    if (action == 'tweet') {
+      return faye.publish("/drone/tweet", {
+        action : $(this).attr("data-param")
+      });
+    } else {
+      return faye.publish("/drone/move", {
+        action: $(this).attr("data-param"),
+        speed: action === "move" ? 0 : void 0
+      });
+    }
   });
+  
   $("*[rel=tooltip]").tooltip();
 }).call(this);
